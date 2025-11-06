@@ -1,0 +1,22 @@
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  modernize-*,
+  cppcoreguidelines-*,
+  hicpp-*,
+  cert-*,
+  misc-no-recursion
+WarningsAsErrors: '*'
+HeaderFilterRegex: '^(src|include)/'
+FormatStyle: file
+CheckOptions:
+  - { key: readability-function-size.LineThreshold,      value: 16 }
+  - { key: readability-function-size.NestingThreshold,   value: 1 }
+  - { key: readability-function-size.StatementThreshold, value: 40 }
+  - { key: readability-function-size.BranchThreshold,    value: 6 }
+  - { key: readability-identifier-naming.FunctionCase,   value: lower_case }
+  - { key: readability-identifier-naming.VariableCase,   value: lower_case }

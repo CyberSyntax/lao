@@ -1,0 +1,211 @@
+fail_fast: false
+default_install_hook_types: [pre-commit, commit-msg, pre-push, post-checkout, post-merge]
+minimum_pre_commit_version: "3.0.0"
+
+repos:
+  # ───────── Policy invariants first ─────────
+  - repo: local
+    hooks:
+      - id: cruft-sweeper
+        name: OS cruft sweeper (delete + untrack ignored)
+        language: system
+        pass_filenames: false
+        entry: bash tool/cruft_sweeper.sh --sweep
+  - repo: local
+    hooks:
+      - id: policy-sync
+        name: policy sync (.clang-tidy from budgets)
+        language: system
+        pass_filenames: false
+        entry: bash tool/sync_policies.sh --check
+
+  - repo: local
+    hooks:
+      - id: policy-doctor
+        name: policy doctor (required files, .DS_Store, arch roots)
+        language: system
+        pass_filenames: false
+        entry: bash tool/policy_doctor.sh
+
+  # ───────── Generic hygiene ─────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: forbid-new-submodules
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: check-executables-have-shebangs
+      - id: no-commit-to-branch
+        args: [--branch, master, --branch, main]
+        stages: [pre-commit]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args: ["--ignore-words-list", "crate,nd,fo,uint", "-w"]
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.4.1
+    hooks:
+      - id: editorconfig-checker
+
+  # ───────── Shell formatting (auto-fix) ─────────
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        args: [ -i, "2", -bn, -ci, -sr ]
+        files: "\\.(sh|bash|zsh)$"
+
+  # ───────── Markdown & Shell (manual) ─────────
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        stages: [manual]
+        files: "\\.(md|MD)$"
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        stages: [manual]
+        files: "\\.(sh|bash|zsh)$"
+
+  # ───────── C/C++ formatting ─────────
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v21.1.5
+    hooks:
+      - id: clang-format
+
+  # ───────── clang-tidy (CERT + budgets) ─────────
+  - repo: local
+    hooks:
+      - id: clang-tidy
+        name: clang-tidy (max strict)
+        language: system
+        pass_filenames: false
+        entry: >-
+          bash -lc '
+            set -e
+            files=$(git ls-files "*.c" "*.cc" "*.cpp" "*.h" "*.hpp")
+            [ -z "$files" ] && exit 0
+            if [ ! -f compile_commands.json ] && [ -f CMakeLists.txt ]; then
+              ./tool/gen_compile_db.sh || true
+            fi
+            if [ -f compile_commands.json ]; then
+              clang-tidy $files --warnings-as-errors="*"
+            else
+              clang-tidy $files --warnings-as-errors="*" -- -Iinclude
+            fi
+          '
+
+  # ───────── extra static analysis ─────────
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: cppcheck
+        args: ["--enable=all", "--inconclusive", "--error-exitcode=1", "--std=c11", "--std=c++20", "--suppress=missingIncludeSystem"]
+
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.89.0
+    hooks:
+      - id: semgrep
+        name: semgrep (Po10/boundaries/max-strict)
+        args:
+          - --config
+          - rules/semgrep/po10.yaml
+          - --config
+          - rules/semgrep/max_strict.yaml
+          - --error
+          - --timeout
+          - "120"
+        files: "\\.(c|cc|cpp|cxx|h|hpp)$"
+
+  # ───────── Budgets: CCN + duplication ─────────
+  - repo: local
+    hooks:
+      - id: budget-gate
+        name: budgets (CCN + duplication)
+        language: system
+        pass_filenames: false
+        entry: bash tool/budget_gate.sh
+
+  # ───────── Secrets (baseline in repo) ─────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+
+  # ───────── Architecture graph checks ─────────
+  - repo: local
+    hooks:
+      - id: depgraph
+        name: depgraph (no cycles / no reverse edges)
+        language: system
+        pass_filenames: false
+        entry: bash tool/depgraph.sh
+
+  # ───────── Optional advanced gates (manual stage) ─────────
+  - repo: local
+    hooks:
+      - id: verify-formal
+        name: formal (Frama-C WP + CBMC/ESBMC) — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/verify_formal.sh
+
+      - id: sanitizers
+        name: sanitizers (ASan/UBSan/TSan via ctest) — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/sanitizer_gate.sh
+
+      - id: fuzz
+        name: fuzz (AFL++) — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/fuzz_gate.sh
+
+      - id: mcdc
+        name: MC/DC gate — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/mcdc_gate.sh
+
+      - id: valgrind
+        name: Valgrind memcheck — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/valgrind_gate.sh
+
+      - id: vendor-integrations
+        name: Vendor integrations (Polyspace/Astrée/CodeSonar/Coverity/LDRA/VectorCAST/SonarQube/Structure101) — detect only
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/vendor_integrations.sh
+
+  # ───────── Commit message policy (Conventional Commits) ─────────
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.9.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]

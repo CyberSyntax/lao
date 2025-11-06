@@ -1,0 +1,17 @@
+# Normalize line endings and mark text files
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+
+# Prevent accidental merge conflicts in generated artifacts
+compile_commands.json -merge
+build/** -merge

@@ -1,0 +1,17 @@
+# Perfect Max-Strict budgets (tighter than 42 Norm; Po10 spirit)
+function_lines_max: 16        # 42=25; JPL/Po10 push for tiny functions
+nesting_max: 1                # flat, reviewable control flow
+cyclomatic_max: 4             # CCN <= 4
+duplication_percent_max: 0    # no copy-paste
+warnings_as_errors: true
+no_recursion: true
+no_goto: true
+no_varargs: true
+
+# Additional quantitative gates used by tools
+params_max: 3                 # <= 3 parameters per function
+locals_max: 4                 # <= 4 local (non-const) vars per function (approx)
+
+# clang-tidy detail thresholds (keep strict)
+statement_threshold: 40
+branch_threshold: 6

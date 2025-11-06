@@ -1,0 +1,26 @@
+# Define modules and allowed directions. Enforced by tool/depgraph.sh.
+modules:
+  - name: core
+    roots: ["src/core/**"]
+    may_depend_on: []
+  - name: domain
+    roots: ["src/domain/**"]
+    may_depend_on: ["core"]
+  - name: ports
+    roots: ["src/ports/**"]
+    may_depend_on: ["domain", "core"]
+  - name: adapters
+    roots: ["src/adapters/**"]
+    may_depend_on: ["ports"]              # one-way outward
+  - name: allocator
+    roots: ["src/allocator/**"]
+    may_depend_on: []
+  - name: concurrency
+    roots: ["src/concurrency/**"]
+    may_depend_on: []
+
+rules:
+  forbid_cycles: true
+  forbid_io_in_core: true                 # checked by semgrep/rules
+  forbid_heap_after_init_in_core: true    # checked by semgrep/rules
+  forbid_reverse_edges: true              # enforced by tool/depgraph.sh

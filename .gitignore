@@ -1,0 +1,38 @@
+# OS cruft (auto-cleaned by tool/cruft_sweeper.sh)
+**/.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+.Spotlight-V100/
+.Trashes/
+.AppleDouble/
+.LSOverride/
+
+# Build & tool artifacts
+build/
+compile_commands.json
+
+# Compiled objects
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Logs
+*.log
