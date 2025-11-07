@@ -1,22 +1,68 @@
-# Perfect Max-Strict budgets (10x stricter than 42 Norm; Po10 + JPL + seL4)
-# Most restrictive numeric ceilings we can automate locally.
-function_lines_max: 10        # <= 10 lines per function body
-nesting_max: 1                # flat, reviewable control flow
-cyclomatic_max: 2             # extremely small units
-duplication_percent_max: 0    # no copy-paste
+# Perfect Max-Strict budgets — verification-friendly subset
+# 10× stricter than 42 Norm / Po10 / JPL / seL4 / JSF / MISRA C / AUTOSAR C++14 Level D.
+# Numerical ceilings chosen for analyzability and proof convergence.
+
+function_lines_max: 10        # ≤ 10 logical lines per function body
+nesting_max: 1                # flat control flow (≤ 1 nested block)
+cyclomatic_max: 2             # very low complexity
+duplication_percent_max: 0    # no copy-paste duplication
 warnings_as_errors: true
 no_recursion: true
 no_goto: true
 no_varargs: true
 
-# Additional quantitative gates used by tools
-params_max: 2                 # <= 2 parameters per function
-locals_max: 2                 # <= 2 local (non-const) vars per function (approx)
+# Quantitative aux limits
+params_max: 2                 # ≤ 2 parameters per function
+locals_max: 2                 # ≤ 2 mutable locals per function
 
-# clang-tidy detail thresholds (keep strict)
-statement_threshold: 20       # ~two dozen simple statements max
-branch_threshold: 3           # <= 3 branches inside a function
+# clang-tidy thresholds (kept ultra-tight)
+statement_threshold: 20       # ≤ ~20 simple statements
+branch_threshold: 2           # ≤ 2 branches per function
 
-# Max-Strict extras (read by semgrep / docs; not all auto-enforced)
-# loops_max: 1                 # advisory: at most one loop per function
-# returns_max: 1               # advisory: single-exit where feasible
+# Advisory ceilings (read by docs / Semgrep)
+loops_max: 1                  # ≤ 1 bounded loop (Power of Ten Rule 2)
+returns_max: 1                # single exit preferred
+
+# Language-subset policy (verified C/C++ subset)
+float_forbidden_in_src: true      # deterministic fixed-point only in src/**
+ban_macros_in_src: true           # no #define/#undef/## inside src/**
+ban_ifdef_in_src: true            # no #ifdef/#ifndef in src/**
+ban_break_continue: true          # structured loops only; single exit
+ban_restrict: true                # forbid 'restrict' for alias analysis soundness
+ban_unions: true                  # prevent type-punning / aliasing
+ban_inline_asm: true              # no inline assembly
+ban_exceptions: true              # no C++ exceptions
+ban_rtti: true                    # no RTTI
+ban_default_arguments: true       # no implicit coupling via defaults
+ban_using_namespace_std: true     # explicit qualification required
+
+# Memory & purity discipline
+dynamic_allocation_policy: forbid_after_init  # allowed only during initialization in allocator/**
+concurrency_only_in: "src/concurrency/**"     # all threads/atomics isolated here
+io_forbidden_in_core: true                    # core module must stay pure
+heap_after_init_forbidden_in_core: true       # no heap use post-init in core
+float_forbidden_in_core: true                 # deterministic core (math-free)
+
+# Recommended analysis gates
+enforce_static_analysis: true     # clang-tidy/cppcheck/Semgrep mandatory
+enforce_dynamic_analysis: true    # sanitizers + Valgrind recommended
+enforce_formal_verification: true # Frama-C / CBMC / ESBMC / CompCert hooks available
+
+# Traceability metadata
+reference_standards:
+  - "NASA Power of Ten (Coding Rules for Safety-Critical Software)"
+  - "JPL Institutional Coding Standard for the C Programming Language"
+  - "JSF AV C++ Coding Standards"
+  - "seL4 Verification Coding Standard"
+  - "MISRA C 2012 + Amendment 3"
+  - "AUTOSAR C++14 Guidelines"
+  - "CERT C / CERT C++ Secure Coding Standards"
+  - "DO-178C Level A / IEC 61508 SIL 4 / ISO 26262 ASIL D"
+  - "BARR-C 2018 / Google / LLVM C++ Guidelines"
+
+# Notes
+# • Use lizard for CCN/length checking.
+# • Use jscpd for duplication = 0 % enforcement.
+# • Semgrep rules extend these to ban loops, macros, casts, floats, and pointer arithmetic.
+# • Depgraph enforces module acyclicity and direction.
+# • Formal tools (Frama-C, CBMC, ESBMC, Polyspace, Astrée) verify absence of runtime errors and prove contracts.

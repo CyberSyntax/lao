@@ -17,6 +17,6 @@ CheckOptions:
   - { key: readability-function-size.LineThreshold,      value: 10 }
   - { key: readability-function-size.NestingThreshold,   value: 1 }
   - { key: readability-function-size.StatementThreshold, value: 20 }
-  - { key: readability-function-size.BranchThreshold,    value: 3 }
+  - { key: readability-function-size.BranchThreshold,    value: 2 }
   - { key: readability-identifier-naming.FunctionCase,   value: lower_case }
   - { key: readability-identifier-naming.VariableCase,   value: lower_case }

@@ -141,6 +141,23 @@ repos:
           - "120"
         files: "\\.(c|cc|cpp|cxx|h|hpp)$"
 
+  # ───────── CWE Top-25 (security posture; manual stage) ─────────
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.89.0
+    hooks:
+      - id: semgrep
+        name: semgrep (CWE Top-25 + security-audit) — manual
+        stages: [manual]
+        args:
+          - --config
+          - p/cwe-top-25
+          - --config
+          - p/security-audit
+          - --error
+          - --timeout
+          - "180"
+        files: "\\.(c|cc|cpp|cxx|h|hpp)$"
+
   # ───────── Budgets: CCN + duplication ─────────
   - repo: local
     hooks:

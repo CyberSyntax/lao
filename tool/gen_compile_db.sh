@@ -1,9 +1,15 @@
 #!/usr/bin/env sh
 set -eu
 
-# Policy hardening flags (kept here so compile_commands.json always satisfies ccflags-doctor)
+# Policy hardening flags (kept here so compile_commands.json satisfies ccflags-doctor)
 POLICY_C_FLAGS="-Wformat -Wformat-security -Wvla -fstack-protector-strong -fno-omit-frame-pointer -fPIE -D_FORTIFY_SOURCE=2"
 POLICY_CXX_FLAGS="$POLICY_C_FLAGS -fno-exceptions -fno-rtti -fvisibility=hidden"
+
+# If default compiler looks like GCC, add GCC-only warnings
+if command -v cc >/dev/null 2>&1 && cc --version 2>/dev/null | grep -qi 'gcc'; then
+  POLICY_C_FLAGS="$POLICY_C_FLAGS -Wformat-overflow -Wformat-truncation"
+  POLICY_CXX_FLAGS="$POLICY_CXX_FLAGS -Wformat-overflow -Wformat-truncation"
+fi
 
 if [ -f "compile_commands.json" ]; then
   echo "compile_commands.json already exists"

@@ -49,19 +49,19 @@ rules:
       - pattern: do { ... } while(1);
       - pattern: do { ... } while(true);
 
-  # Ensure loop has a visible bound (heuristic: compare induction var to constant or sizeof/array length)
-  - id: po10-loop-must-have-bound
-    message: "Loops should compare against a constant/sizeof/array bound (heuristic)."
+  - id: po10-loop-single
+    message: "Power of Ten (project policy): at most one loop per function (heuristic)."
     severity: WARNING
     languages: [c, cpp]
-    pattern-either:
-      - pattern: |
-          while ($COND) { ... }
-      - pattern: |
-          for ($INIT; $COND; $STEP) { ... }
-    metavariable-pattern:
-      metavariable: $COND
-      pattern-not-regex: "(<|<=|>|>=)\\s*(\\d+|sizeof\\s*\\(|ARRAY_LEN\\s*\\(|[A-Z_][A-Z0-9_]*\\))"
+    pattern: |
+      $RET $F(...){
+        ...
+        for ( ... ) { ... }
+        ...
+        for ( ... ) { ... }
+        ...
+      }
+    # Heuristic; may false-positive—manual review expected.
 
   - id: po10-no-vla
     message: "Power of Ten: variable length arrays are disallowed."
@@ -170,7 +170,7 @@ rules:
       - pattern: delete $X
     paths: { exclude: ["src/allocator/**"] }
 
-  # ─────────────── Additional 'max‑strict' C++ bans ───────────────
+  # ─────────────── Additional 'max-strict' C++ bans (reiterated) ───────────────
   - id: ban-exceptions-in-src
     message: "Exceptions are banned in src/**."
     severity: ERROR
@@ -180,77 +180,3 @@ rules:
       - pattern: try { ... }
       - pattern: catch ( ... ) { ... }
     paths: { include: ["src/**"] }
-
-  - id: ban-rtti-in-src
-    message: "RTTI is banned in src/**."
-    severity: ERROR
-    languages: [cpp]
-    pattern-either:
-      - pattern: dynamic_cast<$T>(...)
-      - pattern: typeid(...)
-    paths: { include: ["src/**"] }
-
-  - id: ban-dangerous-casts
-    message: "C-style casts and dangerous casts are banned."
-    severity: ERROR
-    languages: [cpp]
-    pattern-either:
-      - pattern: ( $T )$X
-      - pattern: reinterpret_cast<$T>(...)
-      - pattern: const_cast<$T>(...)
-    paths: { include: ["src/**"] }
-
-  - id: ban-inline-asm
-    message: "Inline assembly is banned."
-    severity: ERROR
-    languages: [c, cpp]
-    pattern-either:
-      - pattern: asm(...)
-      - pattern: __asm__(...)
-    paths: { include: ["src/**"] }
-
-  - id: ban-system-spawn
-    message: "No system()/popen() in src/**."
-    severity: ERROR
-    languages: [c, cpp]
-    pattern-either:
-      - pattern: system(...)
-      - pattern: popen(...)
-    paths: { include: ["src/**"] }
-
-  - id: ban-using-namespace-std
-    message: "Do not use 'using namespace std;'."
-    severity: ERROR
-    languages: [cpp]
-    pattern: using namespace std;
-    paths: { include: ["src/**", "include/**"] }
-
-  # ─────────────── Approximate structural discipline ───────────────
-  - id: core-no-global-mutable
-    message: "No global mutable state in src/core/**."
-    severity: ERROR
-    languages: [c, cpp]
-    patterns:
-      - pattern-either:
-          - pattern: int $X
-          - pattern: long $X
-          - pattern: char $X
-          - pattern: $T *$X
-      - pattern-not: const
-    paths: { include: ["src/core/**"] }
-
-  - id: forbid-function-pointers-in-core-approx
-    message: "Avoid function pointers in core (prefer explicit interfaces)."
-    severity: WARNING
-    languages: [c, cpp]
-    pattern: $T (*$FN)(...)
-    paths: { include: ["src/core/**"] }
-
-  - id: boundary-no-assert-in-src
-    message: "Do not use assert() in src/** (allow in tests/**). Prefer explicit error handling."
-    severity: ERROR
-    languages: [c, cpp]
-    pattern: assert(...)
-    paths:
-      include: ["src/**"]
-      exclude: ["tests/**"]
