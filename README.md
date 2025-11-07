@@ -88,7 +88,7 @@ MISRA/AUTOSAR, JSF AV C++). Numbers come from `rules/budgets.yaml`.
 
 Architecture is declared in `rules/arch.yaml` and enforced by `tool/depgraph.sh`.
 
-```
+```text
 core  ←  domain  ←  ports  ←  adapters
 allocator, concurrency (isolated)
 ```
