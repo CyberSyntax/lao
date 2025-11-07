@@ -49,6 +49,20 @@ rules:
       - pattern: do { ... } while(1);
       - pattern: do { ... } while(true);
 
+  # Ensure loop has a visible bound (heuristic: compare induction var to constant or sizeof/array length)
+  - id: po10-loop-must-have-bound
+    message: "Loops should compare against a constant/sizeof/array bound (heuristic)."
+    severity: WARNING
+    languages: [c, cpp]
+    pattern-either:
+      - pattern: |
+          while ($COND) { ... }
+      - pattern: |
+          for ($INIT; $COND; $STEP) { ... }
+    metavariable-pattern:
+      metavariable: $COND
+      pattern-not-regex: "(<|<=|>|>=)\\s*(\\d+|sizeof\\s*\\(|ARRAY_LEN\\s*\\(|[A-Z_][A-Z0-9_]*\\))"
+
   - id: po10-no-vla
     message: "Power of Ten: variable length arrays are disallowed."
     severity: ERROR

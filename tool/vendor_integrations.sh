@@ -19,7 +19,7 @@ chk() {
 }
 
 # Names vary by installation; adjust as needed for your environment.
-chk "polyspace-bug-finder" "Polyspace"
+chk "polyspace-code-prover" "Polyspace Code Prover"
 chk "astr"                 "Astrée"
 chk "codesonar"            "CodeSonar"
 chk "cov-analyze"          "Coverity Static Analyzer"
@@ -27,5 +27,6 @@ chk "ldra"                 "LDRA"
 chk "vcast"                "VectorCAST"
 chk "sonar-scanner"        "SonarQube Scanner"
 chk "structure101cli"      "Structure101"
+chk "ccomp"                "CompCert (verified C compiler)"
 
 exit "$VI_RC"

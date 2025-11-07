@@ -27,6 +27,14 @@ repos:
         pass_filenames: false
         entry: bash tool/policy_doctor.sh
 
+  - repo: local
+    hooks:
+      - id: ccflags-doctor
+        name: ccflags doctor (no exceptions/RTTI + hardening flags)
+        language: system
+        pass_filenames: false
+        entry: bash tool/ccflags_doctor.sh
+
   # ───────── Generic hygiene ─────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -162,7 +170,7 @@ repos:
   - repo: local
     hooks:
       - id: verify-formal
-        name: formal (Frama-C WP + CBMC/ESBMC) — opt-in
+        name: formal (Frama-C EVA/WP + CBMC/ESBMC/Polyspace/Astrée) — opt-in
         language: system
         pass_filenames: false
         stages: [manual]
@@ -183,7 +191,7 @@ repos:
         entry: bash tool/fuzz_gate.sh
 
       - id: mcdc
-        name: MC/DC gate — opt-in
+        name: MC/DC gate (vendor reports preferred; branch floor fallback) — opt-in
         language: system
         pass_filenames: false
         stages: [manual]
@@ -202,6 +210,13 @@ repos:
         pass_filenames: false
         stages: [manual]
         entry: bash tool/vendor_integrations.sh
+
+      - id: verified-compiler
+        name: verified compiler gate (CompCert if available) — opt-in
+        language: system
+        pass_filenames: false
+        stages: [manual]
+        entry: bash tool/verified_compiler_gate.sh
 
   # ───────── Commit message policy (Conventional Commits) ─────────
   - repo: https://github.com/commitizen-tools/commitizen

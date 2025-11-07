@@ -1,4 +1,22 @@
 rules:
+  # ───────── High‑integrity / verification extras (seL4 + JPL + CERT) ─────────
+  - id: ban-incdec-everywhere
+    message: "No pre/post ++/-- (verification-friendly, seL4)."
+    severity: ERROR
+    languages: [c, cpp]
+    pattern-either: [ "++$X", "$X++", "--$X", "$X--" ]
+    paths: { include: ["src/**", "include/**"] }
+
+  # --- Bounded loops only (Po10 Rule 2): forbid while(true)/unbounded patterns
+  - id: max-bounded-loops
+    message: "Loops must have a fixed, statically provable upper bound (no while(true)/for(;;))."
+    severity: ERROR
+    languages: [c, cpp]
+    pattern-either:
+      - pattern: for(;;) { ... }
+      - pattern: while(true) { ... }
+      - pattern: while(1) { ... }
+
   # --- Control flow bans (most restrictive set; Norm + JSF + Po10 spirit) ---
   - id: ban-for-loop
     message: "Forbidden: 'for' loops (use simple while with small, explicit bodies)."
@@ -25,6 +43,35 @@ rules:
     pattern-either:
       - pattern: "$X ? $Y : $Z"
       - pattern-regex: "\\?[^:]+:"
+
+  - id: ban-setjmp-longjmp
+    message: "Do not use setjmp/longjmp (JPL Rule 11; CERT ERR52-CPP)."
+    severity: ERROR
+    languages: [c, cpp]
+    pattern-either:
+      - pattern: setjmp(...)
+      - pattern: longjmp(...)
+
+  # --- Ban static local non-consts (hidden global state)
+  - id: ban-static-local-nonconst
+    message: "No non-const static local variables (hidden state)."
+    severity: ERROR
+    languages: [c, cpp]
+    patterns:
+      - pattern: |
+          $RET $F(...){
+            ...
+            static $T $X = $INIT;
+            ...
+          }
+      - pattern-not: const
+
+  # --- Limit static_cast to safe forms (heuristic) ---
+  - id: static-cast-narrowing
+    message: "Possible narrowing/static_cast misuse; prefer explicit checked conversions."
+    severity: WARNING
+    languages: [cpp]
+    pattern: "static_cast<$T>( $X )"
 
   # --- Data layout & macro discipline ---
   - id: ban-union
@@ -126,6 +173,20 @@ rules:
       - pattern: "const_cast<$T>(...)"
     paths: { include: ["src/**"] }
 
+  - id: ban-default-arguments
+    message: "Default arguments are banned (implicit coupling)."
+    severity: ERROR
+    languages: [cpp]
+    pattern: "$T $F($T1 $A1 = $D, ...)"
+    paths: { include: ["src/**", "include/**"] }
+
+  - id: ban-friend
+    message: "friend declarations are banned."
+    severity: ERROR
+    languages: [cpp]
+    pattern: "friend $X;"
+    paths: { include: ["src/**", "include/**"] }
+
   - id: ban-inline-asm
     message: "Inline assembly is banned."
     severity: ERROR
@@ -180,3 +241,11 @@ rules:
     paths:
       include: ["src/**"]
       exclude: ["tests/**"]
+
+  # --- Volatile only at boundaries (memory-mapped I/O), never in core ---
+  - id: ban-volatile-in-core
+    message: "No 'volatile' in src/core/**."
+    severity: ERROR
+    languages: [c, cpp]
+    pattern: volatile
+    paths: { include: ["src/core/**"] }
