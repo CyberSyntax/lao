@@ -3,6 +3,8 @@
 > **One command, reproducible quality gates.**
 > **LAO** provides an ultra‑strict, verification‑friendly C/C++ environment with deterministic local gates. You run the same checks locally that CI runs—no surprises.
 
+> "We never trade determinism, reproducibility, or clarity for convenience."
+
 ---
 
 ## Contents
