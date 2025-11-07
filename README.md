@@ -13,7 +13,6 @@
   - [Micro (inside modules)](#micro-inside-modules)
   - [Macro (between modules)](#macro-between-modules)
   - [Determinism & purity](#determinism--purity)
-- [Project layout](#project-layout)
 - [Make targets](#make-targets)
 - [Policies & configuration](#policies--configuration)
 - [Developer workflow](#developer-workflow)
@@ -90,12 +89,6 @@ allocator, concurrency (isolated)
 
 - **`src/core/**` is pure:** **no I/O**, **no randomness/time**, **no sleeping**, **no heap after init**, **no global mutable state**.
 - Dynamic allocation **only** during initialization via `src/allocator/**`.
-
----
-
-## Project layout
-
-(Same structure — unchanged; see root README for reference.)
 
 ---
 
