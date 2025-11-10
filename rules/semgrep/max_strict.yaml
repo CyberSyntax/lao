@@ -4,7 +4,11 @@ rules:
     message: "No pre/post ++/-- (verification-friendly, seL4)."
     severity: ERROR
     languages: [c, cpp]
-    pattern-either: [ "++$X", "$X++", "--$X", "$X--" ]
+    pattern-either:
+      - pattern: "++$X"
+      - pattern: "$X++"
+      - pattern: "--$X"
+      - pattern: "$X--"
     paths: { include: ["src/**", "include/**"] }
 
   # --- Bounded loops only (Po10 Rule 2): forbid while(true)/unbounded patterns
